@@ -1,37 +1,40 @@
-"""Project configuration for packaging and installation."""
+'''
+The setup.py file is an essential part of packaging and 
+distributing Python projects. It is used by setuptools 
+(or distutils in older Python versions) to define the configuration 
+of your project, such as its metadata, dependencies, and more
+'''
 
-from pathlib import Path
+from setuptools import find_packages,setup
 from typing import List
 
-from setuptools import find_packages, setup
-
-BASE_DIR = Path(__file__).resolve().parent
-
-
-def get_requirements() -> List[str]:
-    """Return project dependencies from requirements.txt."""
-    requirements_path = BASE_DIR / "requirements.txt"
-    if not requirements_path.exists():
+def get_requirements()->List[str]:
+    """
+    Thiss function will return list of requirements
+    
+    """
+    requirement_lst:List[str]=[]
+    try:
+        with open('requirements.txt','r') as file:
+            #Read lines from the file
+            lines=file.readlines()
+            ## Process each line
+            for line in lines:
+                requirement=line.strip()
+                ## ignore empty lines and -e .
+                if requirement and requirement!= '-e .':
+                    requirement_lst.append(requirement)
+    except FileNotFoundError:
         print("requirements.txt file not found")
-        return []
 
-    requirements: List[str] = []
-    with requirements_path.open("r", encoding="utf-8") as file:
-        for raw_line in file:
-            requirement = raw_line.strip()
-            if requirement and not requirement.startswith("#") and requirement != "-e .":
-                requirements.append(requirement)
-
-    return requirements
+    return requirement_lst
 
 
-if __name__ == "__main__":
-    setup(
-        name="networksecurity",
-        version="0.1.0",
-        description="Network security project for phishing data",
-        packages=find_packages(),
-        include_package_data=True,
-        install_requires=get_requirements(),
-    )
-
+setup(
+    name ="NetworkSecurity",
+    version="0.0.1",
+    author="Satish sharma",
+    author_email="satish.sharma2709@gmail.com",
+    packages=find_packages(),
+    install_requires=get_requirements()
+)
