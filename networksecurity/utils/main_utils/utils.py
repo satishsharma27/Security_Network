@@ -5,6 +5,8 @@ import os,sys
 import numpy as np
 #import dill
 import pickle
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GridSearchCV
 
 def read_yaml_file(file_path: str) -> dict:
     try:
@@ -52,4 +54,49 @@ def save_object(file_path: str, obj: object) -> None:
         logging.info("Exited the save_object method of MainUtils class")
     except Exception as e:
         raise NetworkSecurityException(e, sys) from e
+    
+    
 
+def load_object(file_path: str, ) -> object:
+    try:
+        if not os.path.exists(file_path):
+            raise Exception(f"The file: {file_path} is not exists")
+        with open(file_path, "rb") as file_obj:
+            return pickle.load(file_obj)
+    except Exception as e:
+        raise NetworkSecurityException(e, sys) from e
+
+
+def load_numpy_array_data(file_path: str) -> np.array:
+    """
+    load numpy array data from file
+    file_path: str location of file to load
+    return: np.array data loaded
+    """
+    try:
+        with open(file_path, "rb") as file_obj:
+            return np.load(file_obj)
+    except Exception as e:
+        raise NetworkSecurityException(e, sys) from e
+    
+    
+def evaluate_models(X_train, y_train, X_test, y_test, models, param) -> dict:
+    """
+    Tune each model with GridSearchCV on the train set, refit it with the best params
+    and return {model_name: test F1 score}. The models in `models` are left fitted.
+    """
+    try:
+        report = {}
+        for name, model in models.items():
+            gs = GridSearchCV(model, param.get(name, {}), cv=3, n_jobs=-1)
+            gs.fit(X_train, y_train)
+
+            model.set_params(**gs.best_params_)
+            model.fit(X_train, y_train)
+
+            y_test_pred = model.predict(X_test)
+            report[name] = f1_score(y_test, y_test_pred)
+            logging.info(f"{name}: best params {gs.best_params_}, test F1 {report[name]:.4f}")
+        return report
+    except Exception as e:
+        raise NetworkSecurityException(e, sys)
